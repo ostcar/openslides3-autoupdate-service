@@ -89,7 +89,7 @@ func (a *Autoupdate) Close() {
 // If the returned value is nil, then the context or the service was closed.
 //
 // The returned data is restricted for the given uid.
-func (a *Autoupdate) Receive(ctx context.Context, uid int, changeID int) (map[string]json.RawMessage, int, error) {
+func (a *Autoupdate) Receive(ctx context.Context, uid int, changeID int) (bool, map[string]json.RawMessage, int, error) {
 	a.mu.RLock()
 	maxChangeID := a.maxChangeID
 	a.mu.RUnlock()
@@ -97,27 +97,27 @@ func (a *Autoupdate) Receive(ctx context.Context, uid int, changeID int) (map[st
 	if changeID >= maxChangeID {
 		nid, keys, err := a.topic.Receive(ctx, uint64(changeID))
 		if err != nil {
-			return nil, 0, fmt.Errorf("get changed keys: %w", err)
+			return false, nil, 0, fmt.Errorf("get changed keys: %w", err)
 		}
 
 		if keys == nil {
 			// service or connection is closed.
-			return nil, 0, nil
+			return false, nil, 0, nil
 		}
 
-		return a.cache.forKeys(keys), int(nid), nil
+		return false, a.cache.forKeys(keys), int(nid), nil
 	}
 
 	if changeID == 0 || changeID < a.minChangeID {
-		return a.cache.all(), maxChangeID, nil
+		return true, a.cache.all(), maxChangeID, nil
 	}
 
 	keys, err := a.receiver.ChangedKeys(changeID, maxChangeID)
 	if err != nil {
-		return nil, 0, fmt.Errorf("receive changed keys: %v", err)
+		return false, nil, 0, fmt.Errorf("receive changed keys: %v", err)
 	}
 
-	return a.cache.forKeys(keys), maxChangeID, nil
+	return false, a.cache.forKeys(keys), maxChangeID, nil
 }
 
 // update updates the cache. It is not save for concourent use.
