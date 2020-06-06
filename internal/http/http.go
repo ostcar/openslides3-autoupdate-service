@@ -89,16 +89,13 @@ func (h *Handler) handleAutoupdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendData(w io.Writer, all bool, data map[string]json.RawMessage, fromChangeID, toChangeID int) error {
+	changed := make(map[string][]json.RawMessage)
 	deleted := make([]string, 0)
 	for k := range data {
 		if data[k] == nil {
 			deleted = append(deleted, k)
-			delete(data, k)
+			continue
 		}
-	}
-
-	changed := make(map[string][]json.RawMessage)
-	for k := range data {
 		collection := strings.Split(k, ":")[0]
 		changed[collection] = append(changed[collection], data[k])
 	}
