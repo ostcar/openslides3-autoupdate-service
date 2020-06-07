@@ -79,7 +79,7 @@ func (h *Handler) handleAutoupdate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := sendData(w, all, data, changeID); err != nil {
+		if err := sendData(w, all, data, changeID, newChangeID); err != nil {
 			sendErr(w, err)
 			return
 		}
