@@ -94,10 +94,10 @@ func sendData(w io.Writer, all bool, data map[string]json.RawMessage, fromChange
 	for k := range data {
 		if data[k] == nil {
 			deleted = append(deleted, k)
-			continue
+		} else {
+			collection := strings.Split(k, ":")[0]
+			changed[collection] = append(changed[collection], data[k])
 		}
-		collection := strings.Split(k, ":")[0]
-		changed[collection] = append(changed[collection], data[k])
 	}
 
 	format := struct {
